@@ -13,23 +13,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.weathertripplanner.viewmodel.TripViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTripScreen(onBack: () -> Unit) {
-    // Состояния для хранения текста, который вводит пользователь
+fun AddTripScreen(
+    viewModel: TripViewModel, // Принимаем ViewModel
+    onBack: () -> Unit
+) {
     var title by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
 
-    // Простая валидация: кнопка "Сохранить" будет активна, только если все поля заполнены
     val isFormValid = title.isNotBlank() && city.isNotBlank() && date.isNotBlank()
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Новая поездка", fontWeight = FontWeight.Bold) },
-                // Кнопка "Назад" в левом верхнем углу
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -49,7 +50,6 @@ fun AddTripScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Поле ввода названия поездки
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -60,7 +60,6 @@ fun AddTripScreen(onBack: () -> Unit) {
                 singleLine = true
             )
 
-            // Поле ввода города
             OutlinedTextField(
                 value = city,
                 onValueChange = { city = it },
@@ -71,7 +70,6 @@ fun AddTripScreen(onBack: () -> Unit) {
                 singleLine = true
             )
 
-            // Поле ввода даты
             OutlinedTextField(
                 value = date,
                 onValueChange = { date = it },
@@ -84,10 +82,9 @@ fun AddTripScreen(onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Кнопка сохранения
             Button(
                 onClick = {
-                    // Возвращаем пользователя назад после "сохранения"
+                    viewModel.addTrip(title = title, city = city, date = date)
                     onBack()
                 },
                 modifier = Modifier.fillMaxWidth(),

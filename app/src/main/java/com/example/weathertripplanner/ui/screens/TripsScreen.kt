@@ -12,26 +12,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-
-// Временная модель данных для отображения структуры поездки.
-data class TripMock(val id: Int, val title: String, val city: String, val date: String)
+import com.example.weathertripplanner.data.model.TripEntity
+import com.example.weathertripplanner.viewmodel.TripViewModel
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripsScreen(onNavigateToId: () -> Unit) {
-    // Список поездок
-    val mockTrips = remember {
-        mutableStateListOf(
-            TripMock(1, "Поездка к бабушке", "Брест", "25.05.2026"),
-            TripMock(2, "Выезд на шашлыки", "Заславль", "30.05.2026"),
-            TripMock(3, "Летний отпуск", "Гродно", "15.07.2026")
-        )
-    }
+fun TripsScreen(
+    viewModel: TripViewModel,
+    onNavigateToId: () -> Unit,
+    onBack: () -> Unit
+) {
+    val trips by viewModel.tripsState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Мои Поездки", fontWeight = FontWeight.Bold) }
+                title = { Text("Мои Поездки", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад на экран погоды"
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -53,7 +58,7 @@ fun TripsScreen(onNavigateToId: () -> Unit) {
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            if (mockTrips.isEmpty()) {
+            if (trips.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -68,7 +73,7 @@ fun TripsScreen(onNavigateToId: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(items = mockTrips, key = { it.id }) { trip ->
+                    items(items = trips, key = { it.id }) { trip ->
                         TripCard(trip = trip)
                     }
                 }
@@ -78,7 +83,7 @@ fun TripsScreen(onNavigateToId: () -> Unit) {
 }
 
 @Composable
-fun TripCard(trip: TripMock) {
+fun TripCard(trip: TripEntity) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -101,9 +106,9 @@ fun TripCard(trip: TripMock) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = trip.city, style = MaterialTheme.typography.bodyMedium)
+                Text(text = " ${trip.city}", style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    text = trip.date,
+                    text = " ${trip.date}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )

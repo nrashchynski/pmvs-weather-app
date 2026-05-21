@@ -25,7 +25,6 @@ fun WeatherScreen(onNavigateToTrips: () -> Unit) {
     var temperature by remember { mutableStateOf("+21°C") }
     var weatherCondition by remember { mutableStateOf("Переменная облачность") }
 
-    // Выносим логику поиска в отдельную функцию
     val performSearch = {
         if (searchQuery.isNotBlank()) {
             displayedCity = searchQuery
