@@ -27,7 +27,7 @@ fun AddTripScreen(
     var title by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var dateText by remember { mutableStateOf("") } // Строка, которую видим в поле
-    
+
     var showDatePicker by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState(

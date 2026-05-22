@@ -33,4 +33,8 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
             tripDao.deleteTrip(trip)
         }
     }
+
+    suspend fun getTripById(id: Int): TripEntity? {
+        return tripDao.getTripById(id)
+    }
 }

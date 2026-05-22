@@ -2,6 +2,7 @@ package com.example.weathertripplanner.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,7 +26,8 @@ import com.example.weathertripplanner.viewmodel.TripViewModel
 fun TripsScreen(
     viewModel: TripViewModel,
     onNavigateToId: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToDetails: (Int) -> Unit
 ) {
     val trips by viewModel.tripsState.collectAsState()
 
@@ -82,7 +84,6 @@ fun TripsScreen(
                         val dismissState = rememberSwipeToDismissBoxState(
                             confirmValueChange = { newValue ->
                                 if (newValue == SwipeToDismissBoxValue.EndToStart) {
-                                    // Если свайпнули справа налево — удаляем из БД
                                     viewModel.deleteTrip(trip)
                                     true
                                 } else {
@@ -93,8 +94,8 @@ fun TripsScreen(
 
                         SwipeToDismissBox(
                             state = dismissState,
-                            enableDismissFromStartToEnd = false, // Свайп слева направо отключен
-                            enableDismissFromEndToStart = true,  // Свайп справа налево включен
+                            enableDismissFromStartToEnd = false,
+                            enableDismissFromEndToStart = true,
                             backgroundContent = {
                                 val color by animateColorAsState(
                                     targetValue = when (dismissState.targetValue) {
@@ -119,7 +120,10 @@ fun TripsScreen(
                                 }
                             },
                             content = {
-                                TripCard(trip = trip)
+                                TripCard(
+                                    trip = trip,
+                                    onCardClick = { onNavigateToDetails(trip.id) }
+                                )
                             }
                         )
                     }
@@ -130,9 +134,14 @@ fun TripsScreen(
 }
 
 @Composable
-fun TripCard(trip: TripEntity) {
+fun TripCard(
+    trip: TripEntity,
+    onCardClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCardClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
