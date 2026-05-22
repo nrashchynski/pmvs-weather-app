@@ -1,20 +1,24 @@
 package com.example.weathertripplanner.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.weathertripplanner.data.model.TripEntity
 import com.example.weathertripplanner.viewmodel.TripViewModel
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +78,50 @@ fun TripsScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(items = trips, key = { it.id }) { trip ->
-                        TripCard(trip = trip)
+
+                        val dismissState = rememberSwipeToDismissBoxState(
+                            confirmValueChange = { newValue ->
+                                if (newValue == SwipeToDismissBoxValue.EndToStart) {
+                                    // Если свайпнули справа налево — удаляем из БД
+                                    viewModel.deleteTrip(trip)
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+                        )
+
+                        SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromStartToEnd = false, // Свайп слева направо отключен
+                            enableDismissFromEndToStart = true,  // Свайп справа налево включен
+                            backgroundContent = {
+                                val color by animateColorAsState(
+                                    targetValue = when (dismissState.targetValue) {
+                                        SwipeToDismissBoxValue.EndToStart -> Color.Red.copy(alpha = 0.8f)
+                                        else -> Color.Transparent
+                                    },
+                                    label = "BackgroundColorAnimation"
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(color, shape = RoundedCornerShape(16.dp))
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = Alignment.CenterEnd
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Удалить",
+                                        tint = Color.White
+                                    )
+                                }
+                            },
+                            content = {
+                                TripCard(trip = trip)
+                            }
+                        )
                     }
                 }
             }
@@ -106,9 +153,9 @@ fun TripCard(trip: TripEntity) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = " ${trip.city}", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "${trip.city}", style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    text = " ${trip.date}",
+                    text = "${trip.date}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
