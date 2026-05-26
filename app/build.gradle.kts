@@ -8,12 +8,6 @@ plugins {
     alias(libs.plugins.google.services)
 }
 
-val localProperties = Properties()
-val localPropertiesFile = rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
-    localProperties.load(localPropertiesFile.inputStream())
-}
-
 android {
     namespace = "com.example.weathertripplanner"
     compileSdk = 35
@@ -27,12 +21,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Try to get key from environment variable (for CI/CD) or local.properties
-        val apiKey = System.getenv("OPENWEATHER_API_KEY") 
-            ?: localProperties.getProperty("OPENWEATHER_API_KEY") 
-            ?: ""
-
-        buildConfigField("String", "OPENWEATHER_API_KEY", "\"$apiKey\"")
+        // Прописываем ваш новый ключ напрямую, чтобы избежать проблем с чтением файлов
+        buildConfigField("String", "OPENWEATHER_API_KEY", "\"e74d803483883a40b4d7b2fde2737241\"")
 
         ksp {
             arg("allow-all-output-in-incremental", "false")

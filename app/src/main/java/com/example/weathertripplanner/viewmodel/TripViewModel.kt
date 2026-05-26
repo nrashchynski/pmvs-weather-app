@@ -6,7 +6,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.weathertripplanner.BuildConfig
 import com.example.weathertripplanner.data.database.AppDatabase
 import com.example.weathertripplanner.data.model.TripEntity
 import com.example.weathertripplanner.data.network.WeatherApiService
@@ -34,6 +33,9 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
     private val _isLoadingWeather = mutableStateOf(false)
     val isLoadingWeather: State<Boolean> = _isLoadingWeather
 
+    // Используем ключ напрямую, чтобы избежать проблем с BuildConfig
+    private val API_KEY = "e74d803483883a40b4d7b2fde2737241"
+
     fun addTrip(title: String, city: String, date: String) {
         viewModelScope.launch {
             val newTrip = TripEntity(title = title, city = city, date = date)
@@ -55,12 +57,12 @@ class TripViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoadingWeather.value = true
             try {
-                // Fetching weather using the API key from BuildConfig
-                val response = weatherApi.getWeather(city, BuildConfig.OPENWEATHER_API_KEY)
+                Log.d("WeatherDebug", "Fetching for $city using Key: $API_KEY")
+                val response = weatherApi.getWeather(city, API_KEY)
                 _weatherData.value = response
+                Log.d("WeatherDebug", "Weather loaded successfully")
             } catch (t: Throwable) {
-                // Log the error and prevent crash (e.g., SecurityException for missing permission)
-                Log.e("TripViewModel", "Error fetching weather for $city", t)
+                Log.e("WeatherDebug", "Error fetching weather for $city", t)
                 _weatherData.value = null
             } finally {
                 _isLoadingWeather.value = false

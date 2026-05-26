@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "378474472703",
+    "project_id": "weathertripplanner-c7002",
+    "storage_bucket": "weathertripplanner-c7002.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:378474472703:android:50efa33bddbbee827f98ca",
+        "android_client_info": {
+          "package_name": "com.example.weathertripplanner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVa1aEXQtB71Bi2mA-qkw7N1cS28TFU3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
