@@ -16,21 +16,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.weathertripplanner.viewmodel.TripViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeatherScreen(onNavigateToTrips: () -> Unit) {
+fun WeatherScreen(
+    viewModel: TripViewModel,
+    onNavigateToTrips: () -> Unit
+) {
     var searchQuery by remember { mutableStateOf("") }
-    var displayedCity by remember { mutableStateOf("Минск") }
-    var temperature by remember { mutableStateOf("+21°C") }
-    var weatherCondition by remember { mutableStateOf("Переменная облачность") }
+    val weatherData by viewModel.weatherData
+    val isLoading by viewModel.isLoadingWeather
 
     val performSearch = {
         if (searchQuery.isNotBlank()) {
-            displayedCity = searchQuery
-            temperature = if (searchQuery.length % 2 == 0) "+15°C" else "+24°C"
-            weatherCondition = if (searchQuery.length % 2 == 0) "Дождь" else "Ясно"
-            searchQuery = ""
+            viewModel.fetchWeather(searchQuery)
         }
     }
 
@@ -48,7 +49,6 @@ fun WeatherScreen(onNavigateToTrips: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             singleLine = true,
-            // Настройки клавиатуры
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Search
@@ -62,62 +62,79 @@ fun WeatherScreen(onNavigateToTrips: () -> Unit) {
         
         Button(
             onClick = { performSearch() },
-            modifier = Modifier.align(Alignment.End)
+            modifier = Modifier.align(Alignment.End),
+            enabled = !isLoading
         ) {
-            Text("Искать")
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Искать")
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
         
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        weatherData?.let { weather ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
             ) {
-                Text(
-                    text = displayedCity,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = weather.cityName,
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = temperature,
-                    fontSize = 64.sp,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                    if (weather.weather.isNotEmpty()) {
+                        AsyncImage(
+                            model = "https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png",
+                            contentDescription = null,
+                            modifier = Modifier.size(100.dp)
+                        )
+                        Text(
+                            text = weather.weather[0].description.replaceFirstChar { it.uppercase() },
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = weatherCondition,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center
-                )
+                    Text(
+                        text = "${weather.main.temp.toInt()}°C",
+                        fontSize = 64.sp,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            InfoCard(title = "Ветер", value = "4 м/с", modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(12.dp))
-            InfoCard(title = "Влажность", value = "65%", modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                InfoCard(title = "Ветер", value = "${weather.wind.speed} м/с", modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.width(12.dp))
+                InfoCard(title = "Влажность", value = "${weather.main.humidity}%", modifier = Modifier.weight(1f))
+            }
+        } ?: Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Text("Введите город для получения прогноза", textAlign = TextAlign.Center)
         }
 
         Spacer(modifier = Modifier.weight(1f))

@@ -30,7 +30,10 @@ fun AppNavigation() {
         startDestination = Screen.MAIN.name
     ) {
         composable(route = Screen.MAIN.name) {
-            WeatherScreen(onNavigateToTrips = { navController.navigate(Screen.TRIPS.name) })
+            WeatherScreen(
+                viewModel = tripViewModel,
+                onNavigateToTrips = { navController.navigate(Screen.TRIPS.name) }
+            )
         }
 
         composable(route = Screen.TRIPS.name) {

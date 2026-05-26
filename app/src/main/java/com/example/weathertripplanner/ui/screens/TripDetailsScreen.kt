@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.weathertripplanner.data.model.TripEntity
 import com.example.weathertripplanner.viewmodel.TripViewModel
 
@@ -20,11 +22,16 @@ fun TripDetailsScreen(
     onBack: () -> Unit
 ) {
     var trip by remember { mutableStateOf<TripEntity?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    var isLoadingTrip by remember { mutableStateOf(true) }
+    val weatherData by viewModel.weatherData
+    val isLoadingWeather by viewModel.isLoadingWeather
 
     LaunchedEffect(tripId) {
         trip = viewModel.getTripById(tripId)
-        isLoading = false
+        isLoadingTrip = false
+        trip?.let {
+            viewModel.fetchWeather(it.city)
+        }
     }
 
     Scaffold(
@@ -48,7 +55,7 @@ fun TripDetailsScreen(
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            if (isLoading) {
+            if (isLoadingTrip) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (trip == null) {
                 Text(
@@ -75,27 +82,64 @@ fun TripDetailsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "Город: ${currentTrip.city}", style = MaterialTheme.typography.bodyLarge)
-                            Text(text = "Дата: ${currentTrip.date}", style = MaterialTheme.typography.bodyLarge)
+                            Text(text = "📍 Город: ${currentTrip.city}", style = MaterialTheme.typography.bodyLarge)
+                            Text(text = "📅 Дата: ${currentTrip.date}", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
 
                     Card(
-                        modifier = Modifier.fillMaxWidth().weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().padding(16.dp),
-                            contentAlignment = Alignment.Center
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Здесь напарник выведет прогноз погоды для г. ${currentTrip.city} на ${currentTrip.date}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontWeight = FontWeight.Medium
+                                text = "Прогноз погоды",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
+                            
+                            if (isLoadingWeather) {
+                                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+                            } else {
+                                weatherData?.let { weather ->
+                                    if (weather.weather.isNotEmpty()) {
+                                        AsyncImage(
+                                            model = "https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png",
+                                            contentDescription = null,
+                                            modifier = Modifier.size(64.dp)
+                                        )
+                                        Text(
+                                            text = weather.weather[0].description.replaceFirstChar { it.uppercase() },
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                    Text(
+                                        text = "${weather.main.temp.toInt()}°C",
+                                        fontSize = 48.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceEvenly
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("Ветер", style = MaterialTheme.typography.labelSmall)
+                                            Text("${weather.wind.speed} м/с", fontWeight = FontWeight.Bold)
+                                        }
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text("Влажность", style = MaterialTheme.typography.labelSmall)
+                                            Text("${weather.main.humidity}%", fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                } ?: Text("Не удалось загрузить данные о погоде")
+                            }
                         }
                     }
                 }

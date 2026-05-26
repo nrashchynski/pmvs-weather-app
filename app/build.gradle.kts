@@ -1,12 +1,22 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.services)
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
 }
 
 android {
     namespace = "com.example.weathertripplanner"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.weathertripplanner"
@@ -16,23 +26,28 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+        // Try to get key from environment variable (for CI/CD) or local.properties
+        val apiKey = System.getenv("OPENWEATHER_API_KEY") 
+            ?: localProperties.getProperty("OPENWEATHER_API_KEY") 
+            ?: ""
+
+        buildConfigField("String", "OPENWEATHER_API_KEY", "\"$apiKey\"")
+
+        ksp {
+            arg("allow-all-output-in-incremental", "false")
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 
@@ -46,7 +61,26 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.navigation.compose)
 
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    // Network
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.gson)
+    implementation(libs.coil.compose)
+
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -54,12 +88,5 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.androidx.navigation.compose)
-
-    val roomVersion = "2.7.0-alpha11"
-    implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
-
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+    kspAndroidTest(libs.androidx.room.compiler)
 }
